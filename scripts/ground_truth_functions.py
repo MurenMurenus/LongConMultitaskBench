@@ -37,7 +37,7 @@ def generate_qa_pairs(
     """
     prompt_template = prompt_template if prompt_template else (
         "Generate a question and a comprehensive answer in the following format:\n"
-        "Question: generated_question Answer: generated_comprehensive_answer\n"
+        "Question: question you generated Answer: generated comprehensive answer\n"
         "based on the following text:\n\n"
         "{text}\n\n"
         "Question:"
@@ -53,10 +53,11 @@ def generate_qa_pairs(
             llm_output = llm.generate(prompt=prompt, context="")
             # Parse the output to extract question and answer
             response_text = llm_output.text
+            print(f"Response text: {response_text}")
             if "Answer:" in response_text:
                 parts = response_text.split("Answer:")
-                question = parts[0].split("Question:", "")[1].strip()
-                answer = parts[1].strip()
+                question = parts[0].replace("Question:", "").strip()
+                answer = parts[1].split("Question:")[0].strip()  # can be more than one pair of Q/A
             else:
                 question = "NO Answer: IN RESPONSE_TEXT"
                 answer = "NO Answer: IN RESPONSE_TEXT"
@@ -168,14 +169,15 @@ def extract_entities_from_text(
             output = llm.generate(prompt=prompt, context="")
             
             # Try to parse as JSON, if not valid, try to regenerate
-            if validate_json_structure(output.text):
-                entities = json.loads(output.text)
-            else:
-                output = llm.generate(prompt=prompt, context="")
-                if validate_json_structure(output.text):
-                    entities = json.loads(output.text)
-                else:
-                    entities = {"error": "Failed to generate valid json"}
+            # if validate_json_structure(output.text):
+            #     entities = json.loads(output.text)
+            # else:
+            #     output = llm.generate(prompt=prompt, context="")
+            #     if validate_json_structure(output.text):
+            #         entities = json.loads(output.text)
+            #     else:
+            #         entities = {"error": "Failed to generate valid json"}
+            entities = output.text
                 
             entities_list.append({
                 "model": llm.name,

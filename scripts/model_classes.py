@@ -11,6 +11,7 @@ from scripts.data_classes import LLMOutput, CouncilDecision
 # Try to import Hugging Face transformers and torch, but make it optional
 from transformers import pipeline, AutoTokenizer, AutoModelForCausalLM
 import torch
+import os
 
 
 class LLM(ABC):
@@ -92,7 +93,7 @@ class HuggingFaceLLM(LLM):
             model=self.model_name,
             tokenizer=self.model_name,
             device=self.device,
-            torch_dtype=torch.float16 if self.device == "cuda" else torch.float32
+            dtype=torch.float16 if self.device == "cuda" else torch.float32
         )
         print(f"Model {self.model_name} loaded successfully!")
 
@@ -124,7 +125,7 @@ class HuggingFaceLLM(LLM):
                 max_new_tokens=200,
                 num_return_sequences=1,
                 temperature=0.7,
-                do_sample=True,
+                do_sample=False,
                 pad_token_id=50256  # EOS token for GPT-2
             )
             
@@ -146,6 +147,69 @@ class HuggingFaceLLM(LLM):
             )
 
 
+class OpenAILLM(LLM):
+    """
+    Implementation of LLM using OpenAI API.
+    """
+    def __init__(self, name: str, model_name: str = "gpt-3.5-turbo", api_key: str = None):
+        super().__init__(name)
+        self.model_name = model_name
+        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
+        
+        if not self.api_key:
+            raise ValueError("OpenAI API key must be provided either as api_key parameter or OPENAI_API_KEY environment variable")
+
+        self.client = OpenAI(api_key=self.api_key)
+
+    def generate(self, prompt: str, context: str) -> LLMOutput:
+        """
+        Generate text using the OpenAI API.
+        
+        Args:
+            prompt: The prompt to generate text from
+            context: Additional context to include with the prompt
+            
+        Returns:
+            LLMOutput object with generated text
+        """
+        try:
+            # Combine prompt and context
+            full_prompt = f"{context}\n\n{prompt}" if context else prompt
+            
+            # Create messages for chat completion
+            messages = [
+                {"role": "user", "content": full_prompt}
+            ]
+            
+            # Generate text using OpenAI API
+            response = self.client.chat.completions.create(
+                model=self.model_name,
+                messages=messages,
+                max_tokens=200,
+                temperature=0.7
+            )
+            
+            generated_text = response.choices[0].message.content.strip()
+            
+            return LLMOutput(
+                model_name=self.name,
+                text=generated_text,
+                metadata={
+                    "model": self.model_name,
+                    "prompt_length": len(full_prompt),
+                    "completion_tokens": response.usage.completion_tokens,
+                    "prompt_tokens": response.usage.prompt_tokens,
+                    "total_tokens": response.usage.total_tokens
+                }
+            )
+        except Exception as e:
+            return LLMOutput(
+                model_name=self.name,
+                text=f"Error generating text: {str(e)}",
+                metadata={"error": str(e)}
+            )
+
+
 class LLMCouncil:
     """
     Aggregates multiple LLMs as judges.
@@ -158,9 +222,49 @@ class LLMCouncil:
         rationales = []
 
         for judge in self.judges:
-            # Placeholder logic
-            votes[judge.name] = True
-            rationales.append(f"{judge.name}: approved")
+            try:
+                # Create evaluation prompt
+                eval_prompt = f"""
+                Instruction: {instruction}
+                
+                Reference Answer: {reference}
+                
+                Candidate Answer: {candidate}
+                
+                Based on the instruction and reference answer, evaluate whether the candidate answer is correct and relevant.
+                Consider factors like accuracy, completeness, and relevance to the instruction.
+                
+                Provide your evaluation in the following format:
+                Vote: [Yes/No] - Whether the candidate answer is acceptable
+                Rationale: [Your explanation for the vote]
+                """
+                
+                # Get evaluation from judge
+                evaluation = judge.generate(eval_prompt, "")
+                eval_text = evaluation.text
+                
+                # Parse the evaluation
+                vote = False
+                rationale = f"{judge.name}: No evaluation response"
+                
+                if "Vote:" in eval_text:
+                    # Extract vote and rationale
+                    lines = eval_text.split('\n')
+                    vote_line = next((line for line in lines if line.startswith("Vote:")), "")
+                    rationale_line = next((line for line in lines if line.startswith("Rationale:")), "")
+                    
+                    vote = "yes" in vote_line.lower() if vote_line else False
+                    rationale = rationale_line.replace("Rationale:", "").strip() if rationale_line else eval_text
+                else:
+                    # Fallback - try to determine from general text
+                    vote = "yes" in eval_text.lower() or "correct" in eval_text.lower() or "acceptable" in eval_text.lower()
+                    rationale = eval_text
+                
+                votes[judge.name] = vote
+                rationales.append(f"{judge.name}: {rationale}")
+            except Exception as e:
+                votes[judge.name] = False
+                rationales.append(f"{judge.name}: Error during evaluation - {str(e)}")
 
         approved = sum(votes.values()) >= (len(votes) // 2 + 1)
         return CouncilDecision(
