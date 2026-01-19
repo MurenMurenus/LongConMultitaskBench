@@ -1,15 +1,13 @@
-from typing import List, Dict, Any
+from typing import List, Dict
 from abc import ABC, abstractmethod
 import sys
 import os
 
-# Add the parent directory to the path to allow imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from scripts.data_classes import LLMOutput, CouncilDecision
 
-# Try to import Hugging Face transformers and torch, but make it optional
-from transformers import pipeline, AutoTokenizer, AutoModelForCausalLM
+from transformers import pipeline
 import torch
 import os
 
@@ -219,7 +217,7 @@ class LLMCouncil:
 
     def verify(self, instruction: str, reference: str, candidate: str) -> CouncilDecision:
         votes = {}
-        rationales = []
+        rationales = {}
 
         for judge in self.judges:
             try:
@@ -227,48 +225,45 @@ class LLMCouncil:
                 eval_prompt = f"""
                 Instruction: {instruction}
                 
-                Reference Answer: {reference}
+                Reference text: {reference}
                 
                 Candidate Answer: {candidate}
                 
-                Based on the instruction and reference answer, evaluate whether the candidate answer is correct and relevant.
+                Based on the instruction and reference text, evaluate whether the candidate answer is correct and relevant.
                 Consider factors like accuracy, completeness, and relevance to the instruction.
                 
                 Provide your evaluation in the following format:
                 Vote: [Yes/No] - Whether the candidate answer is acceptable
                 Rationale: [Your explanation for the vote]
                 """
-                
-                # Get evaluation from judge
                 evaluation = judge.generate(eval_prompt, "")
                 eval_text = evaluation.text
                 
-                # Parse the evaluation
                 vote = False
-                rationale = f"{judge.name}: No evaluation response"
+                rationale = "No evaluation response"
                 
                 if "Vote:" in eval_text:
                     # Extract vote and rationale
                     lines = eval_text.split('\n')
-                    vote_line = next((line for line in lines if line.startswith("Vote:")), "")
-                    rationale_line = next((line for line in lines if line.startswith("Rationale:")), "")
+                    vote_line = next((line for line in lines if line.strip().startswith("Vote:")), "")
+                    rationale_line = next((line for line in lines if line.strip().startswith("Rationale:")), "")
                     
                     vote = "yes" in vote_line.lower() if vote_line else False
                     rationale = rationale_line.replace("Rationale:", "").strip() if rationale_line else eval_text
                 else:
                     # Fallback - try to determine from general text
                     vote = "yes" in eval_text.lower() or "correct" in eval_text.lower() or "acceptable" in eval_text.lower()
-                    rationale = eval_text
+                    rationale = eval_text.strip()
                 
                 votes[judge.name] = vote
-                rationales.append(f"{judge.name}: {rationale}")
+                rationales[judge.name] = rationale
             except Exception as e:
                 votes[judge.name] = False
-                rationales.append(f"{judge.name}: Error during evaluation - {str(e)}")
+                rationales[judge.name] = ("Error during evaluation - {str(e)}")
 
         approved = sum(votes.values()) >= (len(votes) // 2 + 1)
         return CouncilDecision(
             approved=approved,
             votes=votes,
-            rationale=" | ".join(rationales)
+            rationales=rationales
         )

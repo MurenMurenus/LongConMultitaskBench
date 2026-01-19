@@ -5,19 +5,15 @@ import pandas as pd
 import sys
 import os
 
-# Add the parent directory to the path to allow imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Import from separate files
 from scripts.data_classes import LLMOutput, CouncilDecision
-from scripts.read_booksum_data import read_booksum_data
 from scripts.model_classes import LLM, PlaceholderLLM, LLMCouncil, HuggingFaceLLM
 
 
 # -------------------------
-# Functions for ground-truth generationß
+# Functions for ground-truth generation
 # -------------------------
-
 def generate_qa_pairs(
     llms: List[LLM],
     text: str,
@@ -53,7 +49,6 @@ def generate_qa_pairs(
             llm_output = llm.generate(prompt=prompt, context="")
             # Parse the output to extract question and answer
             response_text = llm_output.text
-            print(f"Response text: {response_text}")
             if "Answer:" in response_text:
                 parts = response_text.split("Answer:")
                 question = parts[0].replace("Question:", "").strip()
@@ -64,6 +59,7 @@ def generate_qa_pairs(
             
             qa_pairs.append({
                 "model": llm.name,
+                "response_text": response_text,
                 "question": question,
                 "answer": answer
             })
@@ -71,6 +67,7 @@ def generate_qa_pairs(
             # Fallback in case of error
             qa_pairs.append({
                 "model": llm.name,
+                "response_text": "FAILED TO GENERATE RESPONSE",
                 "question": f"Failed to generate question: {str(e)}",
                 "answer": "Failed to generate answer due to error."
             })

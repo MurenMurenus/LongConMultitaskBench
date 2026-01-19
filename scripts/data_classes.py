@@ -4,7 +4,6 @@ from dataclasses import dataclass, asdict
 import sys
 import os
 
-# Add the parent directory to the path to allow imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
@@ -19,7 +18,7 @@ class LLMOutput:
 class CouncilDecision:
     approved: bool
     votes: Dict[str, bool]
-    rationale: str
+    rationales: Dict[str, bool]
 
 
 @dataclass

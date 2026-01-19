@@ -75,3 +75,27 @@ inject_numerical_hallucination_prompt_template = (
     "Change specific numbers, percentages, or quantitative facts while preserving the overall structure and other factual content."
     "Return only the modified text without any additional explanation."
 )
+
+
+# ---
+# Define prompt templates for validation functions
+# ---
+validate_qa_pairs_council_prompt = (
+    "Validate if the answer is correct and supported by the original text."
+    "Check for factual accuracy and relevance to the question."
+)
+
+validate_structured_outputs_council_prompt = (
+    "Validate if the structured output correctly represents information from the original text."
+    "Check for accuracy, completeness, and proper formatting."
+)
+
+validate_entity_extractions_council_prompt = (
+    "Validate if the extracted entities are correctly identified from the original text."
+    "Check for accuracy and completeness of the extracted entities."
+)
+
+validate_summaries_council_prompt = (
+    "Validate if the summary accurately represents the main points of the original text."
+    "Check for factual accuracy, completeness, and coherence."
+)
