@@ -24,9 +24,8 @@ def read_booksum_data(file_path: str = "data/benchmark_base_chapters_example.jso
         booksum_data = []
         for i, item in enumerate(data):
             booksum_data.append({
-                "chapter_id": f"chapter_{i+1}",
-                "chapter_text": item["context"],
-                "gold_summary": "EXPERT SUMMARY HERE"  # Placeholder as in the original example
+                "chapter_id": item["chapter_id"],
+                "chapter_text": item["chapter_text"],
             })
         
         return booksum_data

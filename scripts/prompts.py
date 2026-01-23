@@ -16,15 +16,18 @@ qa_prompt_template = (
 
 structured_prompt_template = (
     "Extract all relations between characters in JSON format:\n"
-    "{characters: [{name, relations: [{target, type}]}]}"
+    "{characters: [{name, relations: [{target, type}]}]}\n"
+    "Return only the JSON object without any additional explanation."
 )
 
 entity_extraction_prompt_template = (
     "Extract all named entities (people, places, organizations, dates) from the following text "
-    "and format them as JSON:\n\n"
-    "{text}\n\n"
+    "and format them as JSON.\n\n"
+    "Source text: {text}\n\n"
     "Format the output as:\n"
-    "{{\"entities\": [{{\"type\": \"entity_type\", \"name\": \"entity_name\"}}]}}"
+    "{{\"entities\": [{{\"type\": \"entity_type\", \"name\": \"entity_name\"}}]}} "
+    "where entity_name is the name of the named entity extracted from the text and entity_type is the type of the named entity. "
+    "Return only the JSON object without any additional explanation."
 )
 
 summary_prompt_template = (
@@ -41,8 +44,8 @@ inject_qa_hallucination_prompt_template = (
     "Original text: {original_text}\n\n"
     "Question: {question}\n\n"
     "Original answer: {original_answer}\n\n"
-    "Please generate an answer to the question that contains subtle but clearly incorrect factual details (hallucinations) based on the original text.\n"
-    "The hallucinated answer should be fluent and appear plausible but contain at least one factual error.\n"
+    "Please change the original answer to contain incorrect factual details (hallucinations) based on the original text.\n"
+    "The hallucinated answer should be fluent, appear plausible and but contain at least one factual error.\n"
     "Return only the hallucinated answer without any additional explanation.\n"
 )
 

@@ -55,9 +55,9 @@ def build_benchmark_row(
     print(f"Generated {len(qa_pairs)} QA pairs")
     print("Validating QA pairs...")
     qa_validations = validate_with_council(
-        council=council, 
-        original_text=chapter_text, 
-        candidates=qa_pairs, 
+        council=council,
+        original_text=chapter_text,
+        candidates=[model_output['answer'] for model_output in qa_pairs],
         instruction=validate_qa_pairs_council_prompt
     )
     print(f"Validated {len(qa_validations)} QA pairs")
@@ -68,9 +68,9 @@ def build_benchmark_row(
     print(f"Generated {len(structured_outputs)} structured outputs")
     print("Validating structured outputs...")
     structured_validations = validate_with_council(
-        council=council, 
-        original_text=chapter_text, 
-        candidates=structured_outputs, 
+        council=council,
+        original_text=chapter_text,
+        candidates=[model_output.text for model_output in structured_outputs],
         instruction=validate_structured_outputs_council_prompt
     )
     print(f"Validated {len(structured_validations)} structured outputs")
@@ -83,7 +83,7 @@ def build_benchmark_row(
     entity_validations = validate_with_council(
         council=council, 
         original_text=chapter_text, 
-        candidates=entity_extractions, 
+        candidates=[model_output['entities'] for model_output in entity_extractions], 
         instruction=validate_entity_extractions_council_prompt
     )
     print(f"Validated {len(entity_validations)} entity extractions")
@@ -94,9 +94,9 @@ def build_benchmark_row(
     print(f"Generated {len(summaries)} summaries")
     print("Validating summaries...")
     summary_validations = validate_with_council(
-        council=council, 
-        original_text=chapter_text, 
-        candidates=summaries, 
+        council=council,
+        original_text=chapter_text,
+        candidates=[model_output['summary'] for model_output in summaries],
         instruction=validate_summaries_council_prompt
     )
     print(f"Validated {len(summary_validations)} summaries")
@@ -127,9 +127,9 @@ def build_benchmark_row(
     print("Injecting temporal hallucinations...")
     temporal_hallucinations = [
         inject_temporal_hallucination(
-            llms[0], 
-            chapter_text, 
-            summary["summary"], 
+            llms[0],
+            chapter_text,
+            summary["summary"],
             prompt_template=inject_temporal_hallucination_prompt_template
         )
         for summary in summaries
@@ -184,26 +184,63 @@ def build_benchmark_row(
 def build_benchmark_dataset(
     texts: List[Dict[str, str]],
     llms: List[LLM],
-    council: LLMCouncil
+    council: LLMCouncil,
+    output_file: str = "data/LongConMultitaskBenchmark.jsonl"
 ) -> pd.DataFrame:
-
+    
+    # Load existing benchmark dataset if it exists
+    existing_df = pd.DataFrame()
+    existing_chapter_ids = set()
+    if os.path.exists(output_file):
+        try:
+            existing_df = pd.read_json(output_file, lines=True)
+            existing_chapter_ids = set(existing_df["chapter_id"].tolist())
+            print(f"Found {len(existing_chapter_ids)} existing chapters in dataset")
+        except Exception as e:
+            print(f"Warning: Could not load existing dataset: {e}")
+    else:
+        # Empty file creation
+        with open(output_file, "w") as f:
+            pass
+    
     rows = []
     for item in tqdm(texts):
+        # Skip if chapter_id already exists
+        if item["chapter_id"] in existing_chapter_ids:
+            print(f"Skipping existing chapter: {item['chapter_id']}")
+            continue
+            
         row = build_benchmark_row(
             chapter_id=item["chapter_id"],
             chapter_text=item["chapter_text"],
             llms=llms,
             council=council
         )
-        rows.append(row)
 
-    return pd.DataFrame(rows)
+        with open(output_file, 'a') as f:
+            json_line = pd.DataFrame(row).to_json(orient='records', lines=True)
+            f.write(json_line)
+    
+    # # Save new rows to existing dataset
+    # df = pd.DataFrame(rows)
+    # final_df = pd.concat([existing_df, df], ignore_index=True) if len(existing_df) > 0 else df
 
 
 # -------------------------
 # Benchmark generation pipeline
 # -------------------------
 if __name__ == "__main__":
+
+    DATASET_BASIS_PATH = "data/benchmark_base_chapters.json"
+    OUTPUT_DATASET_PATH = "data/LongConMultitaskBenchmark.jsonl"
+
+    print("LOADING BENCHMARK BASIS DATA")
+    booksum_data = read_booksum_data(file_path=DATASET_BASIS_PATH)
+    print(f"BENCHMARK BASIS LOADED ({len(booksum_data)} chapters)")
+
+    # ---
+    # MODELS INIT
+    # ---
     print("INITIALIZING MODELS FOR GENERATION")
     # hf_llm = HuggingFaceLLM(
     #     name="Qwen3-4B-Instruct",
@@ -220,7 +257,6 @@ if __name__ == "__main__":
 
     # hf_llm = PlaceholderLLM("Qwen3-4B-Instruct-2507")
     generation_llms = [hf_llm1, hf_llm2]  # can be multiple copies of same llm, if we want many generations from same model
-    print("MODELS FOR GENERATION INITIALIZED")
 
     # Initialize judges for the council
     print("INITIALIZING LLM COUNCIL JUDGES")
@@ -235,23 +271,21 @@ if __name__ == "__main__":
     )
     judge3 = PlaceholderLLM("Qwen3-4B-Instruct-Judge3")
     judges = [judge1, judge2, judge3]
-    print("HuggingFace judges initialized successfully")
     
     council = LLMCouncil(judges=judges)
-    print("LLM COUNCIL INITIALIZED")
     
-    print("LOADING BENCHMARK BASIS DATA")
-    booksum_data = read_booksum_data(file_path="data/benchmark_base_chapters_example.json")
-    print(f"BENCHMARK BASIS LOADED ({len(booksum_data)} chapters)")
-
+    # ---
+    # BENCHMARK GENERATION
+    # ---
     print("BUILDING BENCHMARK DATASET")
-    df_generated = build_benchmark_dataset(
+    build_benchmark_dataset(
         texts=booksum_data,
         llms=generation_llms,
-        council=council
+        council=council,
+        output_file=OUTPUT_DATASET_PATH
     )
 
-    print("SAVING BENCHMARK DATASET")
-    df_generated.to_json("data/LongConMultitaskBenchmark.json", orient="records", lines=True)
-    print("BENCHMARK DATASET SAVED")
-    print(f"Generated dataset contains {len(df_generated)} rows")
+    # print("SAVING BENCHMARK DATASET")
+    # df_generated.to_json(OUTPUT_DATASET_PATH, orient="records", lines=True)
+    # print("BENCHMARK DATASET SAVED")
+    # print(f"Generated dataset contains {len(df_generated)} rows")

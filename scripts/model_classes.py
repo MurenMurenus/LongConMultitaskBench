@@ -225,12 +225,11 @@ class LLMCouncil:
                 eval_prompt = f"""
                 Instruction: {instruction}
                 
-                Reference text: {reference}
+                Original text: {reference}
                 
                 Candidate Answer: {candidate}
                 
-                Based on the instruction and reference text, evaluate whether the candidate answer is correct and relevant.
-                Consider factors like accuracy, completeness, and relevance to the instruction.
+                Based on the instruction and original text, evaluate whether the candidate answer is correct and relevant.
                 
                 Provide your evaluation in the following format:
                 Vote: [Yes/No] - Whether the candidate answer is acceptable
