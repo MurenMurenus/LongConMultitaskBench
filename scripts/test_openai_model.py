@@ -4,8 +4,8 @@ import os
 # Add the parent directory to the path to allow imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from scripts.model_classes import OpenAILLM, LLMCouncil
-from scripts.data_classes import LLMOutput, CouncilDecision
+from scripts.models.model_classes import OpenAILLM, LLMCouncil
+from scripts.models.data_classes import LLMOutput, CouncilDecision
 
 def test_openai_model():
     """Test the OpenAI model implementation."""

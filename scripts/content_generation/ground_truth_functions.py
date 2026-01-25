@@ -7,8 +7,8 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from scripts.data_classes import LLMOutput, CouncilDecision
-from scripts.model_classes import LLM, PlaceholderLLM, LLMCouncil, HuggingFaceLLM
+from scripts.models.data_classes import LLMOutput, CouncilDecision
+from scripts.models.model_classes import LLM, PlaceholderLLM, LLMCouncil, HuggingFaceLLM
 
 
 # -------------------------

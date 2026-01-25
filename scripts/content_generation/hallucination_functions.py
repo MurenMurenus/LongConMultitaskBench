@@ -3,7 +3,7 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from scripts.model_classes import LLM
+from scripts.models.model_classes import LLM
 
 
 def inject_factual_hallucination(

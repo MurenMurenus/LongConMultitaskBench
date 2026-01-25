@@ -4,19 +4,20 @@ from typing import List, Dict, Any
 import pandas as pd
 import sys
 import os
+import random
 
 from tqdm import tqdm
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from scripts.ground_truth_functions import extract_entities_from_text, generate_qa_pairs, generate_structured_outputs, generate_summaries
-from scripts.hallucination_functions import (
+from scripts.content_generation.ground_truth_functions import extract_entities_from_text, generate_qa_pairs, generate_structured_outputs, generate_summaries
+from scripts.content_generation.hallucination_functions import (
     inject_structural_error,
     inject_temporal_hallucination,
     inject_numerical_hallucination,
     inject_qa_hallucination
 )
-from scripts.validation_functions import validate_with_council
+from scripts.content_generation.validation_functions import validate_with_council
 from scripts.prompts import (
     qa_prompt_template,
     structured_prompt_template,
@@ -33,7 +34,7 @@ from scripts.prompts import (
     validate_summaries_council_prompt
 )
 from scripts.read_booksum_data import read_booksum_data
-from scripts.model_classes import LLM, PlaceholderLLM, LLMCouncil, HuggingFaceLLM, OpenAILLM
+from scripts.models.model_classes import LLM, PlaceholderLLM, LLMCouncil, HuggingFaceLLM, OpenAILLM
 
 
 # -------------------------
@@ -102,7 +103,7 @@ def build_benchmark_row(
     print(f"Validated {len(summary_validations)} summaries")
     
     # ---
-    # Inject hallucinations to answers from qa_pairs
+    # Inject hallucinations in half of the cases
     # ---
     print("Injecting QA hallucinations...")
     hallucinated_answers = [
@@ -113,16 +114,20 @@ def build_benchmark_row(
             qa["answer"],
             prompt_template=inject_qa_hallucination_prompt_template
         )
+        if random.random() < 0.5
+            else "[NO_HALLUCINATION]"
         for qa in qa_pairs
     ]
-    print(f"Injected hallucinations in {len(hallucinated_answers)} answers")
+    print(f"Injected hallucinations in {len([h for h in hallucinated_answers if h != "[NO_HALLUCINATION]"])}/{len(hallucinated_answers)} answers")
     
     print("Injecting structural errors...")
     broken_structures = [
         inject_structural_error(llms[0], s.text, prompt_template=inject_structural_error_prompt_template)
+        if random.random() < 0.5
+            else "[NO_HALLUCINATION]"
         for s in structured_outputs
     ]
-    print(f"Injected structural errors in {len(broken_structures)} outputs")
+    print(f"Injected structural errors in {len([b for b in broken_structures if b != "[NO_HALLUCINATION]"])}/{len(broken_structures)} outputs")
     
     print("Injecting temporal hallucinations...")
     temporal_hallucinations = [
@@ -132,20 +137,25 @@ def build_benchmark_row(
             summary["summary"],
             prompt_template=inject_temporal_hallucination_prompt_template
         )
+        if random.random() < 0.5
+            else "[NO_HALLUCINATION]"
         for summary in summaries
     ]
-    print(f"Injected temporal hallucinations in {len(temporal_hallucinations)} summaries")
+    print(f"Injected temporal hallucinations in {len([t for t in temporal_hallucinations if t != "[NO_HALLUCINATION]"])}/{len(temporal_hallucinations)} summaries")
     
-    print("Injecting numerical hallucinations...")
-    numerical_hallucinations = []
+    print("Injecting entity hallucinations...")
+    entity_hallucinations = []
     for entity_extraction in entity_extractions:
-        if "entities" in entity_extraction and isinstance(entity_extraction["entities"], dict):
-            entities_text = json.dumps(entity_extraction["entities"])
-            hallucinated_entities = inject_numerical_hallucination(llms[0], entities_text, prompt_template=inject_numerical_hallucination_prompt_template)
-            numerical_hallucinations.append(hallucinated_entities)
+        if random.random() < 0.5:
+            if "entities" in entity_extraction and isinstance(entity_extraction["entities"], dict):
+                entities_text = json.dumps(entity_extraction["entities"])
+                hallucinated_entities = inject_numerical_hallucination(llms[0], entities_text, prompt_template=inject_numerical_hallucination_prompt_template)
+                entity_hallucinations.append(hallucinated_entities)
+            else:
+                entity_hallucinations.append("No entities to hallucinate")
         else:
-            numerical_hallucinations.append("No entities to hallucinate")
-    print(f"Injected numerical hallucinations in {len(numerical_hallucinations)} entity extractions")
+            entity_hallucinations.append("[NO_HALLUCINATION]")
+    print(f"Injected numerical hallucinations in {len([e for e in entity_hallucinations if e != "[NO_HALLUCINATION]"])}/{len(entity_hallucinations)} entity extractions")
 
     return {
         "benchmark_id": str(uuid.uuid4()),
@@ -168,7 +178,7 @@ def build_benchmark_row(
         "entity_extraction_prompt_template": entity_extraction_prompt_template,
         "entity_extractions": entity_extractions,
         "entity_validations": entity_validations,
-        "entity_hallucinations": numerical_hallucinations,
+        "entity_hallucinations": entity_hallucinations,
 
         # Summaries
         "summary_prompt_template": summary_prompt_template,
@@ -221,10 +231,6 @@ def build_benchmark_dataset(
             json_line = pd.DataFrame(row).to_json(orient='records', lines=True)
             f.write(json_line)
     
-    # # Save new rows to existing dataset
-    # df = pd.DataFrame(rows)
-    # final_df = pd.concat([existing_df, df], ignore_index=True) if len(existing_df) > 0 else df
-
 
 # -------------------------
 # Benchmark generation pipeline
@@ -284,8 +290,3 @@ if __name__ == "__main__":
         council=council,
         output_file=OUTPUT_DATASET_PATH
     )
-
-    # print("SAVING BENCHMARK DATASET")
-    # df_generated.to_json(OUTPUT_DATASET_PATH, orient="records", lines=True)
-    # print("BENCHMARK DATASET SAVED")
-    # print(f"Generated dataset contains {len(df_generated)} rows")
