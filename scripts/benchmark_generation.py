@@ -158,33 +158,32 @@ def build_benchmark_row(
     print(f"Injected numerical hallucinations in {len([e for e in entity_hallucinations if e != "[NO_HALLUCINATION]"])}/{len(entity_hallucinations)} entity extractions")
 
     return {
-        "benchmark_id": str(uuid.uuid4()),
         "chapter_id": chapter_id,
         "original_text": chapter_text,
 
         # QA
         "qa_prompt_template": qa_prompt_template,
-        "qa_pairs": qa_pairs,
-        "qa_validations": qa_validations,
-        "qa_hallucinations": hallucinated_answers,
+        "qa_pair": qa_pairs,
+        "qa_validation": qa_validations,
+        "qa_hallucination": hallucinated_answers,
 
         # Structured extraction
         "structured_prompt_template": structured_prompt_template,
-        "structured_outputs": [s for s in structured_outputs],
-        "structured_validations": structured_validations,
-        "structured_hallucinations": broken_structures,
+        "structured_output": [s for s in structured_outputs],
+        "structured_validation": structured_validations,
+        "structured_hallucination": broken_structures,
 
         # Entity extraction
         "entity_extraction_prompt_template": entity_extraction_prompt_template,
-        "entity_extractions": entity_extractions,
-        "entity_validations": entity_validations,
-        "entity_hallucinations": entity_hallucinations,
+        "entity_extraction": entity_extractions,
+        "entity_validation": entity_validations,
+        "entity_hallucination": entity_hallucinations,
 
         # Summaries
         "summary_prompt_template": summary_prompt_template,
-        "summaries": summaries,
-        "summary_validations": summary_validations,
-        "summary_hallucinations": temporal_hallucinations,
+        "summary": summaries,
+        "summary_validation": summary_validations,
+        "summary_hallucination": temporal_hallucinations,
     }
 
 
@@ -230,7 +229,7 @@ def build_benchmark_dataset(
         with open(output_file, 'a') as f:
             json_line = pd.DataFrame(row).to_json(orient='records', lines=True)
             f.write(json_line)
-    
+
 
 # -------------------------
 # Benchmark generation pipeline

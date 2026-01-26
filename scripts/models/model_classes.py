@@ -122,7 +122,7 @@ class HuggingFaceLLM(LLM):
                 full_prompt,
                 max_new_tokens=200,
                 num_return_sequences=1,
-                temperature=0.7,
+                # temperature=0.7,
                 do_sample=False,
                 pad_token_id=50256  # EOS token for GPT-2
             )
