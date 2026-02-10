@@ -212,8 +212,8 @@ def main():
     benchmark_path = os.path.join(benchmark_dir, benchmark_files[benchmark_type])
     
     # Model configuration
-    model_path = 'local_models/Llama-3.2-1B-Instruct'
-    model_name = 'Llama-3.2-1B-Instruct'
+    model_path = 'Qwen/Qwen3-4B-Instruct-2507'
+    model_name = 'Qwen3-4B-Instruct-2507'
     
     # Load benchmark
     df = load_benchmark(benchmark_path)

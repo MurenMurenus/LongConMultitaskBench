@@ -232,8 +232,9 @@ class LLMCouncil:
                 Based on the instruction and original text, evaluate whether the candidate answer is correct and relevant.
                 
                 Provide your evaluation in the following format:
-                Vote: [Yes/No] - Whether the candidate answer is acceptable
-                Rationale: [Your explanation for the vote]
+                Vote: [Yes/No] - Whether the candidate answer is acceptable.
+                Rationale: [Your rationale] - Your explanation for the vote.
+                
                 """
                 evaluation = judge.generate(eval_prompt, "")
                 eval_text = evaluation.text

@@ -139,25 +139,16 @@ def inject_temporal_hallucination(
         return "FAILED TO INJECT HALLUCINATIONS"
 
 
-def inject_numerical_hallucination(
+def inject_entity_hallucination(
     llm: LLM,
-    reference: str,
+    entities: str,
     prompt_template: str
 ) -> str:
-    """
-    Modify numerical information in the text using LLM.
-    
-    Args:
-        llm: Language model to use for generation
-        reference: Original text to modify
-        prompt: Custom prompt for the LLM (optional)
-        
-    Returns:
-        Text with numerical hallucination injected
-    """
     # Generate the numerically hallucinated text using the LLM
     try:
-        prompt = prompt_template.format(reference=reference)
+        prompt = prompt_template.format(
+            entities=entities,
+        )
         output = llm.generate(prompt=prompt, context="")
         if output.text.strip():
             return output.text.strip()

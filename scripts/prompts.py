@@ -10,7 +10,8 @@ qa_prompt_template = (
     "Generate a question and a comprehensive answer in the following format:\n"
     "Question: generated_question Answer: generated_comprehensive_answer\n"
     "based on the following text:\n\n"
-    "{text}\n\n"
+    "{text}\n"
+    "Don't explain the question or the answer. Return only the question and the answer without any additional explanation.\n\n"
     "Question:"
 )
 
@@ -22,7 +23,7 @@ structured_prompt_template = (
 )
 
 entity_extraction_prompt_template = (
-    "Extract all named entities (people, places, organizations, dates) from the following text "
+    "Extract all named entities (people, places, dates and other types of entities you can extract) from the following text "
     "and format them as JSON.\n\n"
     "Source text: {text}\n\n"
     "Format the output as:\n"
@@ -65,8 +66,6 @@ inject_structural_error_prompt_template = (
     "Please intentionally corrupt this JSON by introducing structural errors while preserving the factual content.\n"
     "Examples of structural errors: missing braces, wrong separators, mismatched quotes, extra commas, etc.\n"
     "Return only the corrupted JSON without any additional explanation.\n"
-    "Format the corrupted JSON as:\n"
-    "{{\"entities\": [{{\"type\": \"entity_type\", \"name\": \"entity_name\"}}]}}"
     "Corrupted JSON:"
 )
 
@@ -80,12 +79,12 @@ inject_temporal_hallucination_prompt_template = (
     "Modified answer:"
 )
 
-inject_numerical_hallucination_prompt_template = (
-    "Reference text: {reference}\n\n"
-    "Please modify numerical information in the reference text to create hallucinations."
-    "Change specific numbers, percentages, or quantitative facts while preserving the overall structure and other factual content."
-    "Return only the modified text without any additional explanation."
-    "Modified text:"
+inject_entity_hallucination_prompt_template = (
+    "Entities: {entities}\n\n"
+    "Please modify entities to create hallucinations."
+    "Change types of entities, names of entities, or relationships between entities while preserving the overall structure and other factual content."
+    "Return only the modified JSON without any additional explanation."
+    "Modified JSON:"
 )
 
 
@@ -99,12 +98,13 @@ validate_qa_pairs_council_prompt = (
 
 validate_structured_outputs_council_prompt = (
     "Validate if the structured output correctly represents information from the original text."
-    "Check for accuracy, completeness, and proper formatting."
+    "Ensure that all relations between characters are correctly identified and formatted."
+    "Don't check for completeness, because the text is large and contains of many characters and relations."
 )
 
 validate_entity_extractions_council_prompt = (
     "Validate if the extracted entities are correctly identified from the original text."
-    "Check for accuracy and completeness of the extracted entities."
+    "Check for accuracy of the extracted entities."
 )
 
 validate_summaries_council_prompt = (

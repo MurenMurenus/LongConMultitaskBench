@@ -35,6 +35,11 @@ def split_into_labeled_benchmarks(
         original_text = row['original_text']
         prompt = row['qa_pair']['question']
         
+        # Check if QA validation is approved
+        if 'qa_validation' in row:
+            if not row['qa_validation']['approved']:
+                continue
+        
         # Process valid QA pairs
         if row['qa_hallucination'] != "[NO_HALLUCINATION]":
             # Use hallucinated output with label 1
@@ -63,6 +68,11 @@ def split_into_labeled_benchmarks(
     print("Processing structured outputs...")
     structured_rows = []
     for _, row in df.iterrows():
+        # Check if structured validation is approved
+        if 'structured_validation' in row:
+            if not row['structured_validation']['approved']:
+                continue
+            
         chapter_id = row['chapter_id']
         original_text = row['original_text']
         prompt = row['structured_prompt_template']
@@ -94,6 +104,11 @@ def split_into_labeled_benchmarks(
     print("Processing entity extractions...")
     entity_rows = []
     for _, row in df.iterrows():
+        # Check if entity validation is approved
+        if 'entity_validation' in row:
+            if not row['entity_validation']['approved']:
+                continue
+            
         chapter_id = row['chapter_id']
         original_text = row['original_text']
         prompt = row['entity_extraction_prompt_template']
@@ -126,6 +141,11 @@ def split_into_labeled_benchmarks(
     print("Processing summaries...")
     summary_rows = []
     for _, row in df.iterrows():
+        # Check if summary validation is approved
+        if 'summary_validation' in row:
+            if not row['summary_validation']['approved']:
+                continue
+            
         chapter_id = row['chapter_id']
         original_text = row['original_text']
         prompt = row['summary_prompt_template']

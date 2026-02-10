@@ -14,7 +14,7 @@ from scripts.content_generation.ground_truth_functions import extract_entities_f
 from scripts.content_generation.hallucination_functions import (
     inject_structural_error,
     inject_temporal_hallucination,
-    inject_numerical_hallucination,
+    inject_entity_hallucination,
     inject_qa_hallucination
 )
 from scripts.content_generation.validation_functions import validate_with_council
@@ -26,7 +26,7 @@ from scripts.prompts import (
     inject_factual_hallucination_prompt_template,
     inject_structural_error_prompt_template,
     inject_temporal_hallucination_prompt_template,
-    inject_numerical_hallucination_prompt_template,
+    inject_entity_hallucination_prompt_template,
     inject_qa_hallucination_prompt_template,
     validate_qa_pairs_council_prompt,
     validate_structured_outputs_council_prompt,
@@ -149,7 +149,7 @@ def build_benchmark_row(
         if random.random() < 0.5:
             if "entities" in entity_extraction and isinstance(entity_extraction["entities"], dict):
                 entities_text = json.dumps(entity_extraction["entities"])
-                hallucinated_entities = inject_numerical_hallucination(llms[0], entities_text, prompt_template=inject_numerical_hallucination_prompt_template)
+                hallucinated_entities = inject_entity_hallucination(llms[0], entities_text, prompt_template=inject_entity_hallucination_prompt_template)
                 entity_hallucinations.append(hallucinated_entities)
             else:
                 entity_hallucinations.append("No entities to hallucinate")
@@ -216,7 +216,6 @@ def build_benchmark_dataset(
     for item in tqdm(texts):
         # Skip if chapter_id already exists
         if item["chapter_id"] in existing_chapter_ids:
-            print(f"Skipping existing chapter: {item['chapter_id']}")
             continue
             
         row = build_benchmark_row(
@@ -247,6 +246,8 @@ if __name__ == "__main__":
     # MODELS INIT
     # ---
     print("INITIALIZING MODELS FOR GENERATION")
+
+    # local setup
     # hf_llm = HuggingFaceLLM(
     #     name="Qwen3-4B-Instruct",
     #     model_name="local_models/Qwen3-4B-Instruct"
@@ -260,12 +261,27 @@ if __name__ == "__main__":
         model_name="local_models/Llama-3.2-1B-Instruct"
     )
 
+    # gpu setup
+    hf_llm1 = HuggingFaceLLM(
+        name="Qwen3-4B-Instruct-2507",
+        model_name="Qwen/Qwen3-4B-Instruct-2507"
+    )
+    # hf_llm1 = HuggingFaceLLM(
+    #     name="gpt-oss-20b",
+    #     model_name="openai/gpt-oss-20b"
+    # )
+    hf_llm2 = HuggingFaceLLM(
+        name="Qwen2.5-7B-Instruct",
+        model_name="Qwen/Qwen2.5-7B-Instruct"
+    )
+
     # hf_llm = PlaceholderLLM("Qwen3-4B-Instruct-2507")
-    generation_llms = [hf_llm1, hf_llm2]  # can be multiple copies of same llm, if we want many generations from same model
+    generation_llms = [hf_llm2]  # can be multiple copies of same llm, if we want many generations from same model
 
     # Initialize judges for the council
     print("INITIALIZING LLM COUNCIL JUDGES")
-    # Use local HuggingFace models for the council
+
+    # local setup
     judge1 = HuggingFaceLLM(
         name="Llama-3.2-1B-Instruct-Judge1",
         model_name="local_models/Llama-3.2-1B-Instruct"
@@ -276,7 +292,9 @@ if __name__ == "__main__":
     )
     judge3 = PlaceholderLLM("Qwen3-4B-Instruct-Judge3")
     judges = [judge1, judge2, judge3]
-    
+
+    # gpu setup
+    judges = [hf_llm1, hf_llm2]
     council = LLMCouncil(judges=judges)
     
     # ---
@@ -289,3 +307,5 @@ if __name__ == "__main__":
         council=council,
         output_file=OUTPUT_DATASET_PATH
     )
+
+    
