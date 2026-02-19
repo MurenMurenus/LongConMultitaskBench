@@ -252,14 +252,14 @@ if __name__ == "__main__":
     #     name="Qwen3-4B-Instruct",
     #     model_name="local_models/Qwen3-4B-Instruct"
     # )
-    hf_llm1 = HuggingFaceLLM(
-        name="Llama-3.2-1B-Instruct-1",
-        model_name="local_models/Llama-3.2-1B-Instruct"
-    )
-    hf_llm2 = HuggingFaceLLM(
-        name="Llama-3.2-1B-Instruct-2",
-        model_name="local_models/Llama-3.2-1B-Instruct"
-    )
+    # hf_llm1 = HuggingFaceLLM(
+    #     name="Llama-3.2-1B-Instruct-1",
+    #     model_name="local_models/Llama-3.2-1B-Instruct"
+    # )
+    # hf_llm2 = HuggingFaceLLM(
+    #     name="Llama-3.2-1B-Instruct-2",
+    #     model_name="local_models/Llama-3.2-1B-Instruct"
+    # )
 
     # gpu setup
     hf_llm1 = HuggingFaceLLM(

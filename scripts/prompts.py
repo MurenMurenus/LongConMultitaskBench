@@ -66,6 +66,8 @@ inject_structural_error_prompt_template = (
     "Please intentionally corrupt this JSON by introducing structural errors while preserving the factual content.\n"
     "Examples of structural errors: missing braces, wrong separators, mismatched quotes, extra commas, etc.\n"
     "Return only the corrupted JSON without any additional explanation.\n"
+    "Format the corrupted JSON as:\n"
+    "{{\"entities\": [{{\"type\": \"entity_type\", \"name\": \"entity_name\"}}]}}"
     "Corrupted JSON:"
 )
 

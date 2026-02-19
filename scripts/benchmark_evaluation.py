@@ -208,12 +208,19 @@ def main():
     }
     
     # Select which benchmark to evaluate
-    benchmark_type = "qa"  # Change this to evaluate different benchmarks
+    benchmark_type = "entity"  # Change this to evaluate different benchmarks
     benchmark_path = os.path.join(benchmark_dir, benchmark_files[benchmark_type])
     
     # Model configuration
-    model_path = 'Qwen/Qwen3-4B-Instruct-2507'
-    model_name = 'Qwen3-4B-Instruct-2507'
+    # model_path = 'Qwen/Qwen3-4B-Instruct-2507'
+    # model_name = 'Qwen3-4B-Instruct-2507'
+
+    model_path = 'Qwen/Qwen2.5-7B-Instruct'
+    model_name = 'Qwen2.5-7B-Instruct'
+
+
+    # model_path = 'openai/gpt-oss-20b'
+    # model_name = 'gpt-oss-20b'
     
     # Load benchmark
     df = load_benchmark(benchmark_path)
@@ -225,14 +232,20 @@ def main():
     )
     
     # Evaluate benchmark (limit to first 100 samples for faster execution)
-    df_subset = df.head(100)  # Remove this limit for full evaluation
-    predictions, ground_truth, detailed_results = evaluate_benchmark(df_subset, llm)
+    # df = df.head(100)  # Remove this limit for full evaluation
+    predictions, ground_truth, detailed_results = evaluate_benchmark(df, llm)
     
     # Calculate metrics
     metrics = calculate_metrics(ground_truth, predictions)
     
     # Save predictions and metrics to files
-    save_predictions_and_metrics(detailed_results, metrics, benchmark_type, model_name)
+    save_predictions_and_metrics(
+        detailed_results,
+        metrics,
+        benchmark_type,
+        model_name,
+        output_dir=f"results_{model_name}"
+    )
     
     # Print results
     print("\n" + "="*50)

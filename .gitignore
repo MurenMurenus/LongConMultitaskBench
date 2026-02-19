@@ -1,4 +1,6 @@
-data/
+data/*
+!data/benchmark_base_chapters.json
+!data/LongConMultitaskBenchmark.jsonl
 results/
 local_models/
 check.ipynb

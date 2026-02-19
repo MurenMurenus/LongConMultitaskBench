@@ -91,7 +91,8 @@ class HuggingFaceLLM(LLM):
             model=self.model_name,
             tokenizer=self.model_name,
             device=self.device,
-            dtype=torch.float16 if self.device == "cuda" else torch.float32
+            dtype=torch.bfloat16 if self.device == "cuda" else torch.float32,
+            max_length=None
         )
         print(f"Model {self.model_name} loaded successfully!")
 
@@ -233,7 +234,8 @@ class LLMCouncil:
                 
                 Provide your evaluation in the following format:
                 Vote: [Yes/No] - Whether the candidate answer is acceptable.
-                Rationale: [Your rationale] - Your explanation for the vote.
+                Rationale: [Your rationale] - Your explanation for the vote. Do not provide additional analysis or commentary beyond what is strictly necessary for evaluating the entity extraction.
+                Your evaluation:
                 
                 """
                 evaluation = judge.generate(eval_prompt, "")

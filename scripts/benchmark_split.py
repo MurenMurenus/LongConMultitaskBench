@@ -188,7 +188,7 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--output-dir", 
-        default="data/labeled_benchmarks",
+        default="benchmarks",
         help="Directory to save the output benchmark files (default: data/labeled_benchmarks)"
     )
     

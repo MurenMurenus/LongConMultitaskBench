@@ -1,0 +1,6 @@
+data/benchmark_base_chapters.json filter=lfs diff=lfs merge=lfs -text
+data/LongConMultitaskBenchmark.jsonl filter=lfs diff=lfs merge=lfs -text
+benchmarks/entity_benchmark.csv filter=lfs diff=lfs merge=lfs -text
+benchmarks/qa_benchmark.csv filter=lfs diff=lfs merge=lfs -text
+benchmarks/structured_benchmark.csv filter=lfs diff=lfs merge=lfs -text
+benchmarks/summary_benchmark.csv filter=lfs diff=lfs merge=lfs -text
