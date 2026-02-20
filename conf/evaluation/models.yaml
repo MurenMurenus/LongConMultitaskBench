@@ -1,0 +1,41 @@
+# Models configuration for benchmark evaluation (prediction generation)
+evaluation_models:
+  # Local models (for development/testing)
+  local:
+    qwen3_4b:
+      _target_: scripts.models.model_classes.HuggingFaceLLM
+      name: "Qwen3-4B-Instruct"
+      model_name: "local_models/Qwen3-4B-Instruct"
+      device: "cpu"
+    
+    llama_3_2_1b:
+      _target_: scripts.models.model_classes.HuggingFaceLLM
+      name: "Llama-3.2-1B-Instruct"
+      model_name: "local_models/Llama-3.2-1B-Instruct"
+      device: "cpu"
+  
+  # GPU models (for production)
+  gpu:
+    qwen3_4b_2507:
+      _target_: scripts.models.model_classes.HuggingFaceLLM
+      name: "Qwen3-4B-Instruct-2507"
+      model_name: "Qwen/Qwen3-4B-Instruct-2507"
+      device: "cuda"
+    
+    qwen2_5_7b:
+      _target_: scripts.models.model_classes.HuggingFaceLLM
+      name: "Qwen2.5-7B-Instruct"
+      model_name: "Qwen/Qwen2.5-7B-Instruct"
+      device: "cuda"
+    
+    gpt_oss_20b:
+      _target_: scripts.models.model_classes.HuggingFaceLLM
+      name: "gpt-oss-20b"
+      model_name: "openai/gpt-oss-20b"
+      device: "cuda"
+  
+  # API models
+  api:
+    openai_placeholder:
+      _target_: scripts.models.model_classes.PlaceholderLLM
+      name: "OpenAI-Placeholder"

@@ -11,6 +11,16 @@ from transformers import pipeline
 import torch
 import os
 
+# Conditional import for OpenAI
+try:
+    from openai import OpenAI
+    OPENAI_AVAILABLE = True
+except ImportError:
+    OPENAI_AVAILABLE = False
+    class OpenAI:
+        def __init__(self, *args, **kwargs):
+            raise ImportError("OpenAI package not installed. Please install it with 'pip install openai'")
+
 
 class LLM(ABC):
     """

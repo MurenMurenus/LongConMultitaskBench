@@ -3,12 +3,16 @@ import sys
 import os
 import json
 from typing import List, Dict, Tuple
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from tqdm import tqdm
+import hydra
+from omegaconf import DictConfig
+from hydra.utils import instantiate
 
 # Add the parent directory to the path to allow imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# Set HYDRA_FULL_ERROR=1 for full error reporting
+os.environ["HYDRA_FULL_ERROR"] = "1"
 from scripts.models.model_classes import LLM, HuggingFaceLLM, PlaceholderLLM
 from scripts.prompts import hallucination_detection_prompt
 
@@ -129,40 +133,17 @@ def evaluate_benchmark(df: pd.DataFrame, llm: LLM) -> Tuple[List[int], List[int]
     return predictions, ground_truth, detailed_results
 
 
-def calculate_metrics(y_true: List[int], y_pred: List[int]) -> Dict[str, float]:
-    """
-    Calculate evaluation metrics.
-    
-    Args:
-        y_true: Ground truth labels
-        y_pred: Predicted labels
-        
-    Returns:
-        Dictionary with metric names and values
-    """
-    metrics = {
-        'accuracy': accuracy_score(y_true, y_pred),
-        'precision': precision_score(y_true, y_pred, zero_division=0),
-        'recall': recall_score(y_true, y_pred, zero_division=0),
-        'f1': f1_score(y_true, y_pred, zero_division=0)
-    }
-    
-    return metrics
-
-
-def save_predictions_and_metrics(
+def save_predictions(
     detailed_results: List[Dict],
-    metrics: Dict[str, float],
     benchmark_type: str,
     model_name: str,
     output_dir: str = "results"
 ):
     """
-    Save predictions and metrics to files.
+    Save predictions to CSV file.
     
     Args:
         detailed_results: List of detailed results for each sample
-        metrics: Dictionary of calculated metrics
         benchmark_type: Type of benchmark evaluated
         model_name: Name of the model used for evaluation
         output_dir: Directory to save results
@@ -176,30 +157,15 @@ def save_predictions_and_metrics(
     predictions_path = os.path.join(output_dir, predictions_filename)
     predictions_df.to_csv(predictions_path, index=False)
     print(f"Predictions saved to {predictions_path}")
-    
-    # Save metrics to JSON
-    metrics_filename = f"{benchmark_type}_metrics.json"
-    metrics_path = os.path.join(output_dir, metrics_filename)
-    
-    # Add metadata to metrics
-    metrics_with_metadata = {
-        "benchmark_type": benchmark_type,
-        "model_name": model_name,
-        "samples_evaluated": len(detailed_results),
-        "metrics": metrics
-    }
-    
-    with open(metrics_path, 'w') as f:
-        json.dump(metrics_with_metadata, f, indent=2)
-    print(f"Metrics saved to {metrics_path}")
 
 
-def main():
+@hydra.main(version_base=None, config_path="../conf", config_name="config")
+def main(cfg: DictConfig):
     """
     Main function to run benchmark evaluation.
     """
     # Define benchmark paths
-    benchmark_dir = "benchmarks"
+    benchmark_dir = cfg.paths.benchmarks_dir
     benchmark_files = {
         "qa": "qa_benchmark.csv",
         "entity": "entity_benchmark.csv",
@@ -208,64 +174,38 @@ def main():
     }
     
     # Select which benchmark to evaluate
-    benchmark_type = "entity"  # Change this to evaluate different benchmarks
+    benchmark_type = cfg.benchmark.default_type  # Change this to evaluate different benchmarks
     benchmark_path = os.path.join(benchmark_dir, benchmark_files[benchmark_type])
     
-    # Model configuration
-    # model_path = 'Qwen/Qwen3-4B-Instruct-2507'
-    # model_name = 'Qwen3-4B-Instruct-2507'
-
-    model_path = 'Qwen/Qwen2.5-7B-Instruct'
-    model_name = 'Qwen2.5-7B-Instruct'
-
-
-    # model_path = 'openai/gpt-oss-20b'
-    # model_name = 'gpt-oss-20b'
+    # Get model configuration from Hydra config
+    model_config = cfg.evaluation.evaluation_models.gpu.qwen2_5_7b  # Default model
     
     # Load benchmark
     df = load_benchmark(benchmark_path)
     
-    # Initialize LLM
-    llm = initialize_llm(
-        model_path=model_path,
-        model_name=model_name
-    )
+    # Initialize LLM from config using instantiate
+    llm = instantiate(model_config)
     
     # Evaluate benchmark (limit to first 100 samples for faster execution)
     # df = df.head(100)  # Remove this limit for full evaluation
     predictions, ground_truth, detailed_results = evaluate_benchmark(df, llm)
     
-    # Calculate metrics
-    metrics = calculate_metrics(ground_truth, predictions)
-    
-    # Save predictions and metrics to files
-    save_predictions_and_metrics(
+    # Save predictions to file
+    save_predictions(
         detailed_results,
-        metrics,
         benchmark_type,
-        model_name,
-        output_dir=f"results_{model_name}"
+        llm.name,
+        output_dir=f"results_{llm.name}"
     )
     
-    # Print results
+    # Print basic completion info
     print("\n" + "="*50)
-    print("BENCHMARK EVALUATION RESULTS")
+    print("BENCHMARK EVALUATION COMPLETE")
     print("="*50)
     print(f"Benchmark type: {benchmark_type}")
-    print(f"Model used: {model_name}")
+    print(f"Model used: {llm.name}")
     print(f"Samples evaluated: {len(predictions)}")
-    print("\nMetrics:")
-    for metric_name, value in metrics.items():
-        print(f"  {metric_name.capitalize()}: {value:.4f}")
-    
-    # Count hallucinated vs non-hallucinated
-    pred_hallucinated = sum(predictions)
-    true_hallucinated = sum(ground_truth)
-    print(f"\nHallucination counts:")
-    print(f"  Predicted hallucinated: {pred_hallucinated}")
-    print(f"  Actual hallucinated: {true_hallucinated}")
-    print(f"  Predicted non-hallucinated: {len(predictions) - pred_hallucinated}")
-    print(f"  Actual non-hallucinated: {len(ground_truth) - true_hallucinated}")
+    print(f"Predictions saved to results_{llm.name}/{benchmark_type}_predictions.csv")
 
 
 if __name__ == "__main__":

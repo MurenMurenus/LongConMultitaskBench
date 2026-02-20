@@ -1,0 +1,33 @@
+# Main configuration file
+defaults:
+  - generation: models
+  - evaluation: models
+  - metrics: config
+  - override hydra/hydra_logging: disabled  
+  - override hydra/job_logging: disabled
+
+hydra:
+  output_subdir: null
+  run:
+    dir: .
+
+# Global settings
+paths:
+  data_dir: "data"
+  benchmarks_dir: "benchmarks"
+  results_dir: "results"
+  models_dir: "local_models"
+
+# Dataset settings
+dataset:
+  basis_path: "data/benchmark_base_chapters.json"
+  output_path: "data/LongConMultitaskBenchmark.jsonl"
+
+# Benchmark settings
+benchmark:
+  types:
+    - "qa"
+    - "entity"
+    - "structured"
+    - "summary"
+  default_type: "summary"

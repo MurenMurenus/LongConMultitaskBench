@@ -1,0 +1,27 @@
+# Classification metrics
+classification:
+  - name: "accuracy"
+    description: "Accuracy score"
+    enabled: true
+  
+  - name: "precision"
+    description: "Precision score"
+    enabled: true
+  
+  - name: "recall"
+    description: "Recall score"
+    enabled: true
+  
+  - name: "f1"
+    description: "F1 score"
+    enabled: true
+
+# Additional metrics that could be added
+additional:
+  - name: "roc_auc"
+    description: "ROC AUC score"
+    enabled: false
+  
+  - name: "matthews_corrcoef"
+    description: "Matthews correlation coefficient"
+    enabled: false

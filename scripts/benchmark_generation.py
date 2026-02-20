@@ -7,6 +7,9 @@ import os
 import random
 
 from tqdm import tqdm
+import hydra
+from omegaconf import DictConfig
+from hydra.utils import instantiate
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -233,10 +236,14 @@ def build_benchmark_dataset(
 # -------------------------
 # Benchmark generation pipeline
 # -------------------------
-if __name__ == "__main__":
+# Set HYDRA_FULL_ERROR=1 for full error reporting
+import os
+os.environ["HYDRA_FULL_ERROR"] = "1"
 
-    DATASET_BASIS_PATH = "data/benchmark_base_chapters.json"
-    OUTPUT_DATASET_PATH = "data/LongConMultitaskBenchmark.jsonl"
+@hydra.main(version_base=None, config_path="../conf", config_name="config")
+def main(cfg: DictConfig):
+    DATASET_BASIS_PATH = cfg.dataset.basis_path
+    OUTPUT_DATASET_PATH = cfg.dataset.output_path
 
     print("LOADING BENCHMARK BASIS DATA")
     booksum_data = read_booksum_data(file_path=DATASET_BASIS_PATH)
@@ -246,55 +253,26 @@ if __name__ == "__main__":
     # MODELS INIT
     # ---
     print("INITIALIZING MODELS FOR GENERATION")
+    
+    # Initialize generation models from config using instantiate
+    generation_llms = []
+    for model_key, model_config in cfg.generation.generation_models.gpu.items():
+        model = instantiate(model_config)
+        generation_llms.append(model)
+    
+    # Use only the first model if multiple are configured
+    if len(generation_llms) > 1:
+        generation_llms = [generation_llms[0]]
+        print(f"Using only the first model for generation: {generation_llms[0].name}")
 
-    # local setup
-    # hf_llm = HuggingFaceLLM(
-    #     name="Qwen3-4B-Instruct",
-    #     model_name="local_models/Qwen3-4B-Instruct"
-    # )
-    # hf_llm1 = HuggingFaceLLM(
-    #     name="Llama-3.2-1B-Instruct-1",
-    #     model_name="local_models/Llama-3.2-1B-Instruct"
-    # )
-    # hf_llm2 = HuggingFaceLLM(
-    #     name="Llama-3.2-1B-Instruct-2",
-    #     model_name="local_models/Llama-3.2-1B-Instruct"
-    # )
-
-    # gpu setup
-    hf_llm1 = HuggingFaceLLM(
-        name="Qwen3-4B-Instruct-2507",
-        model_name="Qwen/Qwen3-4B-Instruct-2507"
-    )
-    # hf_llm1 = HuggingFaceLLM(
-    #     name="gpt-oss-20b",
-    #     model_name="openai/gpt-oss-20b"
-    # )
-    hf_llm2 = HuggingFaceLLM(
-        name="Qwen2.5-7B-Instruct",
-        model_name="Qwen/Qwen2.5-7B-Instruct"
-    )
-
-    # hf_llm = PlaceholderLLM("Qwen3-4B-Instruct-2507")
-    generation_llms = [hf_llm2]  # can be multiple copies of same llm, if we want many generations from same model
-
-    # Initialize judges for the council
+    # Initialize judges for the council from config using instantiate
     print("INITIALIZING LLM COUNCIL JUDGES")
-
-    # local setup
-    judge1 = HuggingFaceLLM(
-        name="Llama-3.2-1B-Instruct-Judge1",
-        model_name="local_models/Llama-3.2-1B-Instruct"
-    )
-    judge2 = HuggingFaceLLM(
-        name="Llama-3.2-1B-Instruct-Judge2",
-        model_name="local_models/Llama-3.2-1B-Instruct"
-    )
-    judge3 = PlaceholderLLM("Qwen3-4B-Instruct-Judge3")
-    judges = [judge1, judge2, judge3]
-
-    # gpu setup
-    judges = [hf_llm1, hf_llm2]
+    
+    judges = []
+    for judge_key, judge_config in cfg.generation.council_judges.gpu.items():
+        judge = instantiate(judge_config)
+        judges.append(judge)
+    
     council = LLMCouncil(judges=judges)
     
     # ---
@@ -308,4 +286,6 @@ if __name__ == "__main__":
         output_file=OUTPUT_DATASET_PATH
     )
 
-    
+
+if __name__ == "__main__":
+    main()
