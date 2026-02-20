@@ -30,4 +30,9 @@ benchmark:
     - "entity"
     - "structured"
     - "summary"
-  default_type: "summary"
+  eval_type: "entity"  # Default benchmark type for evaluation
+
+# Evaluation settings
+evaluation:
+  model_env: "gpu"     # Environment: local, gpu, or api
+  model_choice: "qwen2_5_7b"  # Model name from the selected environment

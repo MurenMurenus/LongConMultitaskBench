@@ -28,6 +28,12 @@ evaluation_models:
       model_name: "Qwen/Qwen2.5-7B-Instruct"
       device: "cuda"
     
+    qwen3_8b:
+      _target_: scripts.models.model_classes.HuggingFaceLLM
+      name: "Qwen3-8B"
+      model_name: "Qwen/Qwen3-8B"
+      device: "cuda"
+    
     gpt_oss_20b:
       _target_: scripts.models.model_classes.HuggingFaceLLM
       name: "gpt-oss-20b"

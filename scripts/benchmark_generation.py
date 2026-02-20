@@ -121,7 +121,7 @@ def build_benchmark_row(
             else "[NO_HALLUCINATION]"
         for qa in qa_pairs
     ]
-    print(f"Injected hallucinations in {len([h for h in hallucinated_answers if h != "[NO_HALLUCINATION]"])}/{len(hallucinated_answers)} answers")
+    print(f"Injected hallucinations in {len([h for h in hallucinated_answers if h != '[NO_HALLUCINATION]'])}/{len(hallucinated_answers)} answers")
     
     print("Injecting structural errors...")
     broken_structures = [
@@ -130,7 +130,7 @@ def build_benchmark_row(
             else "[NO_HALLUCINATION]"
         for s in structured_outputs
     ]
-    print(f"Injected structural errors in {len([b for b in broken_structures if b != "[NO_HALLUCINATION]"])}/{len(broken_structures)} outputs")
+    print(f"Injected structural errors in {len([b for b in broken_structures if b != '[NO_HALLUCINATION]'])}/{len(broken_structures)} outputs")
     
     print("Injecting temporal hallucinations...")
     temporal_hallucinations = [
@@ -144,7 +144,7 @@ def build_benchmark_row(
             else "[NO_HALLUCINATION]"
         for summary in summaries
     ]
-    print(f"Injected temporal hallucinations in {len([t for t in temporal_hallucinations if t != "[NO_HALLUCINATION]"])}/{len(temporal_hallucinations)} summaries")
+    print(f"Injected temporal hallucinations in {len([t for t in temporal_hallucinations if t != '[NO_HALLUCINATION]'])}/{len(temporal_hallucinations)} summaries")
     
     print("Injecting entity hallucinations...")
     entity_hallucinations = []
@@ -158,7 +158,7 @@ def build_benchmark_row(
                 entity_hallucinations.append("No entities to hallucinate")
         else:
             entity_hallucinations.append("[NO_HALLUCINATION]")
-    print(f"Injected numerical hallucinations in {len([e for e in entity_hallucinations if e != "[NO_HALLUCINATION]"])}/{len(entity_hallucinations)} entity extractions")
+    print(f"Injected numerical hallucinations in {len([e for e in entity_hallucinations if e != '[NO_HALLUCINATION]'])}/{len(entity_hallucinations)} entity extractions")
 
     return {
         "chapter_id": chapter_id,
@@ -259,11 +259,6 @@ def main(cfg: DictConfig):
     for model_key, model_config in cfg.generation.generation_models.gpu.items():
         model = instantiate(model_config)
         generation_llms.append(model)
-    
-    # Use only the first model if multiple are configured
-    if len(generation_llms) > 1:
-        generation_llms = [generation_llms[0]]
-        print(f"Using only the first model for generation: {generation_llms[0].name}")
 
     # Initialize judges for the council from config using instantiate
     print("INITIALIZING LLM COUNCIL JUDGES")

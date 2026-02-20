@@ -80,13 +80,28 @@ python scripts/benchmark_evaluation.py
 
 To use a different model:
 ```bash
-python scripts/benchmark_evaluation.py evaluation_models.gpu.qwen3_4b_2507
+python scripts/benchmark_evaluation.py evaluation.model_choice=qwen3_4b_2507
+```
+
+To evaluate a different benchmark type:
+```bash
+python scripts/benchmark_evaluation.py benchmark.eval_type=qa
+```
+
+To use a different model environment:
+```bash
+python scripts/benchmark_evaluation.py evaluation.model_env=local evaluation.model_choice=qwen3_4b
 ```
 
 ### Metrics Calculation
 
 ```bash
 python scripts/calculate_metrics.py
+```
+
+To use a different model name (consistent with evaluation):
+```bash
+python scripts/calculate_metrics.py evaluation.model_choice=qwen3_4b_2507
 ```
 
 To enable additional metrics:

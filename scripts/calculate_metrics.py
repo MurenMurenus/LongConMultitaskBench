@@ -92,8 +92,16 @@ def main(cfg: DictConfig):
     Main function to calculate metrics from predictions.
     """
     # Configuration from Hydra config
-    benchmark_type = cfg.benchmark.default_type
-    model_name = "Qwen2.5-7B-Instruct"  # This would typically come from the predictions file
+    benchmark_type = cfg.benchmark.eval_type
+    
+    # Get model configuration from Hydra config for consistent naming
+    model_env = cfg.evaluation.get("model_env", "gpu")
+    model_choice = cfg.evaluation.get("model_choice", "qwen2_5_7b")
+    
+    # Get the model name from the configuration
+    model_config = cfg.evaluation.evaluation_models[model_env][model_choice]
+    model_name = model_config.get("name", model_choice)
+
     results_dir = f"results_{model_name}"
     
     # Load predictions

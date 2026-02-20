@@ -173,12 +173,15 @@ def main(cfg: DictConfig):
         "summary": "summary_benchmark.csv"
     }
     
-    # Select which benchmark to evaluate
-    benchmark_type = cfg.benchmark.default_type  # Change this to evaluate different benchmarks
+    # Select which benchmark to evaluate from config
+    benchmark_type = cfg.benchmark.eval_type
     benchmark_path = os.path.join(benchmark_dir, benchmark_files[benchmark_type])
     
     # Get model configuration from Hydra config
-    model_config = cfg.evaluation.evaluation_models.gpu.qwen2_5_7b  # Default model
+    # Allow specifying model through config.evaluation.model_choice
+    model_env = cfg.evaluationюmodel_env
+    model_name = cfg.evaluation.model_choice
+    model_config = cfg.evaluation.evaluation_models[model_env][model_name]
     
     # Load benchmark
     df = load_benchmark(benchmark_path)
