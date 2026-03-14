@@ -150,12 +150,8 @@ def build_benchmark_row(
     entity_hallucinations = []
     for entity_extraction in entity_extractions:
         if random.random() < 0.5:
-            if "entities" in entity_extraction and isinstance(entity_extraction["entities"], dict):
-                entities_text = json.dumps(entity_extraction["entities"])
-                hallucinated_entities = inject_entity_hallucination(llms[0], entities_text, prompt_template=inject_entity_hallucination_prompt_template)
-                entity_hallucinations.append(hallucinated_entities)
-            else:
-                entity_hallucinations.append("No entities to hallucinate")
+            hallucinated_entities = inject_entity_hallucination(llms[0], entity_extraction["entities"], prompt_template=inject_entity_hallucination_prompt_template)
+            entity_hallucinations.append(hallucinated_entities)
         else:
             entity_hallucinations.append("[NO_HALLUCINATION]")
     print(f"Injected numerical hallucinations in {len([e for e in entity_hallucinations if e != '[NO_HALLUCINATION]'])}/{len(entity_hallucinations)} entity extractions")

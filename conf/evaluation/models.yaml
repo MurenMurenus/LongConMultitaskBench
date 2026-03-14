@@ -29,10 +29,11 @@ evaluation_models:
       device: "cuda"
     
     qwen3_8b:
-      _target_: scripts.models.model_classes.HuggingFaceLLM
+      _target_: scripts.models.model_classes.QwenThinkingLLM
       name: "Qwen3-8B"
       model_name: "Qwen/Qwen3-8B"
       device: "cuda"
+      enable_thinking: false
     
     gpt_oss_20b:
       _target_: scripts.models.model_classes.HuggingFaceLLM

@@ -132,3 +132,89 @@ Instructions:
 
 Your response (HALLUCINATED or CORRECT):
 """
+
+
+# Define task-specific hallucination detection prompts
+qa_hallucination_detection_prompt = """
+You are tasked with detecting hallucinations in AI-generated question-answering responses. A hallucination is when the answer contains factual errors or information that contradicts the provided context.
+
+Context: {context}
+
+Question: {prompt}
+
+Generated Answer: {output}
+
+Based on the context and the question, determine if the generated answer contains any factual errors or hallucinations.
+
+Instructions:
+1. Compare the generated answer with the context carefully
+2. Check if the answer correctly addresses the question based on the context
+3. Look for any factual discrepancies, incorrect information, or statements that cannot be verified from the context
+4. Pay special attention to details like names, dates, events, and relationships mentioned in the answer
+5. Respond with only "HALLUCINATED" if the answer contains hallucinations, or "CORRECT" if it does not
+
+Your response (HALLUCINATED or CORRECT):
+"""
+
+structured_hallucination_detection_prompt = """
+You are tasked with detecting hallucinations in AI-generated structured outputs (JSON format). A hallucination is when the structured output contains entities, relationships, or information that contradicts the provided context.
+
+Context: {context}
+
+Prompt: {prompt}
+
+Generated Structured Output: {output}
+
+Based on the context and the prompt, determine if the generated structured output contains any factual errors or hallucinations.
+
+Instructions:
+1. Compare the generated structured output with the context carefully
+2. Check if all entities, relationships, and information in the output can be verified from the context
+3. Look for any fictional entities, incorrect relationships, or fabricated information
+4. Validate the structure and format of the JSON output
+5. Respond with only "HALLUCINATED" if the output contains hallucinations, or "CORRECT" if it does not
+
+Your response (HALLUCINATED or CORRECT):
+"""
+
+entity_hallucination_detection_prompt = """
+You are tasked with detecting hallucinations in AI-generated entity extraction outputs. A hallucination is when the extracted entities contain names, types, or information that contradicts the provided context.
+
+Context: {context}
+
+Prompt: {prompt}
+
+Generated Entity Extraction: {output}
+
+Based on the context and the prompt, determine if the generated entity extraction contains any factual errors or hallucinations.
+
+Instructions:
+1. Compare the extracted entities with the context carefully
+2. Check if all extracted entities actually exist in the context
+3. Verify that entity types are correctly identified
+4. Look for any fictional entities, incorrect entity types, or fabricated information
+5. Validate the structure and format of the JSON output
+6. Respond with only "HALLUCINATED" if the extraction contains hallucinations, or "CORRECT" if it does not
+
+Your response (HALLUCINATED or CORRECT):
+"""
+
+summary_hallucination_detection_prompt = """
+You are tasked with detecting hallucinations in AI-generated summaries. A hallucination is when the summary contains factual errors or information that contradicts the provided context.
+
+Context: {context}
+
+Generated Summary: {output}
+
+Based on the context, determine if the generated summary contains any factual errors or hallucinations.
+
+Instructions:
+1. Compare the generated summary with the context carefully
+2. Check if all key points and facts in the summary are supported by the context
+3. Look for any factual discrepancies, incorrect information, or statements that cannot be verified from the context
+4. Pay special attention to details like names, dates, events, and relationships mentioned in the summary
+5. Ensure the summary accurately represents the main points of the original text
+6. Respond with only "HALLUCINATED" if the summary contains hallucinations, or "CORRECT" if it does not
+
+Your response (HALLUCINATED or CORRECT):
+"""

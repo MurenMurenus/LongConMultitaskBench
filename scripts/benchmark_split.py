@@ -113,7 +113,7 @@ def split_into_labeled_benchmarks(
         original_text = row['original_text']
         prompt = row['entity_extraction_prompt_template']
         
-        if row['entity_hallucination'] != "[NO_HALLUCINATION]":
+        if row['entity_hallucination'] != "[NO_HALLUCINATION]" and row['entity_hallucination'] != "No entities to hallucinate":
             # Use hallucinated output with label 1
             output = row['entity_hallucination']
             label = 1

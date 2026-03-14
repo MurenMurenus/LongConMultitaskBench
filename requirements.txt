@@ -9,3 +9,5 @@ scikit-learn>=1.7.2
 accelerate>=1.12.0
 hydra-core>=1.3.2
 omegaconf>=2.3.0
+matplotlib>=3.5.0
+seaborn>=0.11.0

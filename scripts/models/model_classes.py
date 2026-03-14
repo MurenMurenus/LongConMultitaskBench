@@ -7,7 +7,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from scripts.models.data_classes import LLMOutput, CouncilDecision
 
-from transformers import pipeline
+from transformers import pipeline, AutoModelForCausalLM, AutoTokenizer
 import torch
 import os
 
@@ -209,6 +209,111 @@ class OpenAILLM(LLM):
                     "completion_tokens": response.usage.completion_tokens,
                     "prompt_tokens": response.usage.prompt_tokens,
                     "total_tokens": response.usage.total_tokens
+                }
+            )
+        except Exception as e:
+            return LLMOutput(
+                model_name=self.name,
+                text=f"Error generating text: {str(e)}",
+                metadata={"error": str(e)}
+            )
+
+
+class QwenThinkingLLM(LLM):
+    """
+    Implementation of LLM for Qwen models with thinking mode support.
+    """
+    def __init__(self, name: str, model_name: str = None, device: str = None, enable_thinking: bool = True):
+        super().__init__(name)
+        self.model_name = model_name
+        self.device = device or ("cuda" if torch.cuda.is_available() else "cpu")
+        self.enable_thinking = enable_thinking
+        self.tokenizer = None
+        self.model = None
+        self._initialize_model()
+
+    def _initialize_model(self):
+        """Initialize the Qwen model and tokenizer."""
+        print(f"Loading Qwen model {self.model_name} on device {self.device}...")
+        self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
+        self.model = AutoModelForCausalLM.from_pretrained(
+            self.model_name,
+            torch_dtype="auto",
+            device_map="auto"
+        )
+        print(f"Qwen model {self.model_name} loaded successfully!")
+
+    def generate(self, prompt: str, context: str) -> LLMOutput:
+        """
+        Generate text using the Qwen model with thinking mode support.
+        
+        Args:
+            prompt: The prompt to generate text from
+            context: Additional context to include with the prompt
+            
+        Returns:
+            LLMOutput object with generated text
+        """
+        if not self.model or not self.tokenizer:
+            return LLMOutput(
+                model_name=self.name,
+                text="Error: Model not initialized.",
+                metadata={"error": "Model not initialized"}
+            )
+        
+        try:
+            # Combine prompt and context
+            full_prompt = f"{context}\n\n{prompt}" if context else prompt
+            
+            # Prepare messages for chat template
+            messages = [
+                {"role": "user", "content": full_prompt}
+            ]
+            
+            # Apply chat template with thinking mode control
+            text = self.tokenizer.apply_chat_template(
+                messages,
+                tokenize=False,
+                add_generation_prompt=True,
+                enable_thinking=self.enable_thinking
+            )
+            
+            # Tokenize input
+            model_inputs = self.tokenizer([text], return_tensors="pt").to(self.model.device)
+            
+            # Generate text
+            generated_ids = self.model.generate(
+                **model_inputs,
+                max_new_tokens=200
+            )
+            
+            output_ids = generated_ids[0][len(model_inputs.input_ids[0]):].tolist()
+            
+            # Parse thinking content if thinking mode is enabled
+            thinking_content = ""
+            content = ""
+            
+            if self.enable_thinking:
+                try:
+                    # rindex finding 151668 (</think>)
+                    index = len(output_ids) - output_ids[::-1].index(151668)
+                except ValueError:
+                    index = 0
+                
+                thinking_content = self.tokenizer.decode(output_ids[:index], skip_special_tokens=True).strip("\n")
+                content = self.tokenizer.decode(output_ids[index:], skip_special_tokens=True).strip("\n")
+            else:
+                content = self.tokenizer.decode(output_ids, skip_special_tokens=True).strip("\n")
+            
+            # Return the main content (without thinking content if thinking mode is enabled)
+            return LLMOutput(
+                model_name=self.name,
+                text=content,
+                metadata={
+                    "prompt_length": len(full_prompt),
+                    "model": self.model_name,
+                    "thinking_enabled": self.enable_thinking,
+                    "thinking_content": thinking_content if self.enable_thinking else None
                 }
             )
         except Exception as e:

@@ -1,7 +1,10 @@
 data/*
 !data/benchmark_base_chapters.json
 !data/LongConMultitaskBenchmark.jsonl
-results/
+results_*/*_predictions.csv
+!results_*/*_metrics.json
+v1_results_*
+v1_benchmarks
 local_models/
 check.ipynb
 
