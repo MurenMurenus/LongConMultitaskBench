@@ -89,6 +89,7 @@ def collect_all_metrics(results_dirs: List[str]) -> pd.DataFrame:
 def create_comparative_histograms(df: pd.DataFrame, output_dir: str = "visualizations"):
     """
     Create comparative histograms for metrics across models.
+    Dynamically adjusts grid layout based on number of metrics.
     
     Args:
         df: DataFrame with metrics data
@@ -100,6 +101,23 @@ def create_comparative_histograms(df: pd.DataFrame, output_dir: str = "visualiza
     # Get unique benchmark types and metric names
     benchmark_types = df["benchmark_type"].unique()
     metric_names = df["metric_name"].unique()
+    num_metrics = len(metric_names)
+    
+    # Calculate grid dimensions based on number of metrics
+    if num_metrics <= 2:
+        nrows, ncols = 1, num_metrics
+    elif num_metrics <= 4:
+        nrows, ncols = 2, 2
+    elif num_metrics <= 6:
+        nrows, ncols = 2, 3
+    elif num_metrics <= 9:
+        nrows, ncols = 3, 3
+    else:
+        nrows, ncols = 4, 3
+    
+    # Calculate figure size based on grid dimensions
+    fig_width = ncols * 7
+    fig_height = nrows * 5
     
     # Create histograms for each benchmark type
     for benchmark_type in benchmark_types:
@@ -109,10 +127,14 @@ def create_comparative_histograms(df: pd.DataFrame, output_dir: str = "visualiza
             continue
             
         # Create a subplot for each metric
-        fig, axes = plt.subplots(2, 2, figsize=(15, 12))
+        fig, axes = plt.subplots(nrows, ncols, figsize=(fig_width, fig_height))
         fig.suptitle(f'Metric Comparison - {benchmark_type.title()} Benchmark', fontsize=16)
         
-        axes = axes.flatten()
+        # Handle single subplot case
+        if num_metrics == 1:
+            axes = [axes]
+        else:
+            axes = axes.flatten()
         
         for i, metric_name in enumerate(metric_names):
             if i >= len(axes):
@@ -138,7 +160,7 @@ def create_comparative_histograms(df: pd.DataFrame, output_dir: str = "visualiza
                 ax.bar_label(container, fmt='%.3f', rotation=90, padding=3)
         
         # Hide unused subplots
-        for j in range(len(metric_names), len(axes)):
+        for j in range(num_metrics, len(axes)):
             axes[j].set_visible(False)
         
         plt.tight_layout()
@@ -154,6 +176,7 @@ def create_comparative_histograms(df: pd.DataFrame, output_dir: str = "visualiza
 def create_overall_metrics_histogram(df: pd.DataFrame, output_dir: str):
     """
     Create an overall histogram showing all metrics grouped by model.
+    Dynamically adjusts figure size based on number of metrics.
     
     Args:
         df: DataFrame with metrics data
@@ -163,15 +186,16 @@ def create_overall_metrics_histogram(df: pd.DataFrame, output_dir: str):
     df_copy = df.copy()
     df_copy['metric_identifier'] = df_copy['benchmark_type'] + '_' + df_copy['metric_name']
     
-    # Create a wide format dataframe for easier plotting
-    pivot_df = df_copy.pivot_table(
-        index='model',
-        columns='metric_identifier',
-        values='metric_value'
-    )
+    # Get unique metric identifiers for sizing
+    num_metrics = df_copy['metric_identifier'].nunique()
+    num_models = df_copy['model'].nunique()
+    
+    # Calculate figure size based on number of metrics and models
+    fig_width = max(12, num_models * 3)
+    fig_height = max(8, num_metrics * 0.5)
     
     # Create the overall histogram
-    fig, ax = plt.subplots(figsize=(20, 10))
+    fig, ax = plt.subplots(figsize=(fig_width, fig_height))
     
     # Melt the dataframe for easier plotting with seaborn
     melted_df = df_copy[['model', 'metric_identifier', 'metric_value']]
@@ -183,7 +207,12 @@ def create_overall_metrics_histogram(df: pd.DataFrame, output_dir: str):
     ax.set_ylabel('Metric Value')
     ax.set_xlabel('Model')
     ax.tick_params(axis='x', rotation=45)
-    ax.legend(title='Metrics', bbox_to_anchor=(1.05, 1), loc='upper left')
+    
+    # Place legend outside the plot for better visibility with many metrics
+    if num_metrics > 6:
+        ax.legend(title='Metrics', bbox_to_anchor=(1.0, 1.0), loc='upper left', ncol=2)
+    else:
+        ax.legend(title='Metrics', bbox_to_anchor=(1.05, 1), loc='upper left')
     
     # Add value labels on bars (for better readability)
     # Note: This might be cluttered with too many bars, so we'll skip individual labels
@@ -198,6 +227,7 @@ def create_overall_metrics_histogram(df: pd.DataFrame, output_dir: str):
 def create_overall_comparison_plots(df: pd.DataFrame, output_dir: str):
     """
     Create overall comparison plots showing all models and metrics.
+    Dynamically adjusts figure size based on data dimensions.
     
     Args:
         df: DataFrame with metrics data
@@ -210,8 +240,15 @@ def create_overall_comparison_plots(df: pd.DataFrame, output_dir: str):
         values='metric_value'
     )
     
+    # Calculate figure size based on data dimensions
+    num_models = len(pivot_df.index)
+    num_columns = len(pivot_df.columns)
+    
+    fig_width = max(12, num_columns * 2)
+    fig_height = max(8, num_models * 1.5)
+    
     # Create heatmap
-    plt.figure(figsize=(15, 10))
+    plt.figure(figsize=(fig_width, fig_height))
     sns.heatmap(pivot_df, annot=True, fmt='.3f', cmap='viridis', cbar_kws={'label': 'Metric Value'})
     plt.title('Overall Model Performance Comparison')
     plt.ylabel('Model')

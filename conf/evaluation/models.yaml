@@ -40,9 +40,3 @@ evaluation_models:
       name: "gpt-oss-20b"
       model_name: "openai/gpt-oss-20b"
       device: "cuda"
-  
-  # API models
-  api:
-    openai_placeholder:
-      _target_: scripts.models.model_classes.PlaceholderLLM
-      name: "OpenAI-Placeholder"

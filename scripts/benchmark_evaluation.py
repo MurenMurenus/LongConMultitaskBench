@@ -47,19 +47,16 @@ def initialize_llm(
     Initialize an LLM for hallucination detection.
     
     Args:
-        model_path: Path to the model or 'OpenAI_API' for placeholder
+        model_path: Path to the model
         model_name: Name for the model instance
         
     Returns:
         Initialized LLM instance
     """
-    if model_path == 'OpenAI_API':
-        llm = PlaceholderLLM(name=model_name or "OpenAI-Placeholder")
-    else:
-        llm = HuggingFaceLLM(
-            name=model_name or "HuggingFace-Model",
-            model_name=model_path
-        )
+    llm = HuggingFaceLLM(
+        name=model_name or "HuggingFace-Model",
+        model_name=model_path
+    )
     
     return llm
 

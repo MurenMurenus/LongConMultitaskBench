@@ -37,7 +37,7 @@ from scripts.prompts import (
     validate_summaries_council_prompt
 )
 from scripts.read_booksum_data import read_booksum_data
-from scripts.models.model_classes import LLM, PlaceholderLLM, LLMCouncil, HuggingFaceLLM, OpenAILLM
+from scripts.models.model_classes import LLM, PlaceholderLLM, LLMCouncil, HuggingFaceLLM
 
 
 # -------------------------

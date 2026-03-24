@@ -3,7 +3,6 @@ torch>=1.12.0
 pandas>=1.3.0
 pyarrow>=6.0.0
 tqdm>=4.67.0
-openai>=1.0.0
 gguf>=0.10.0
 scikit-learn>=1.7.2
 accelerate>=1.12.0

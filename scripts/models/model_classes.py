@@ -11,21 +11,10 @@ from transformers import pipeline, AutoModelForCausalLM, AutoTokenizer
 import torch
 import os
 
-# Conditional import for OpenAI
-try:
-    from openai import OpenAI
-    OPENAI_AVAILABLE = True
-except ImportError:
-    OPENAI_AVAILABLE = False
-    class OpenAI:
-        def __init__(self, *args, **kwargs):
-            raise ImportError("OpenAI package not installed. Please install it with 'pip install openai'")
-
 
 class LLM(ABC):
     """
-    Abstract LLM interface.
-    Plug in OpenAI / Anthropic / vLLM / local models later.
+    Abstract LLM interface
     """
     def __init__(self, name: str):
         self.name = name
@@ -147,69 +136,6 @@ class HuggingFaceLLM(LLM):
                 model_name=self.name,
                 text=generated_text,
                 metadata={"prompt_length": len(full_prompt), "model": self.model_name}
-            )
-        except Exception as e:
-            return LLMOutput(
-                model_name=self.name,
-                text=f"Error generating text: {str(e)}",
-                metadata={"error": str(e)}
-            )
-
-
-class OpenAILLM(LLM):
-    """
-    Implementation of LLM using OpenAI API.
-    """
-    def __init__(self, name: str, model_name: str = "gpt-3.5-turbo", api_key: str = None):
-        super().__init__(name)
-        self.model_name = model_name
-        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
-        
-        if not self.api_key:
-            raise ValueError("OpenAI API key must be provided either as api_key parameter or OPENAI_API_KEY environment variable")
-
-        self.client = OpenAI(api_key=self.api_key)
-
-    def generate(self, prompt: str, context: str) -> LLMOutput:
-        """
-        Generate text using the OpenAI API.
-        
-        Args:
-            prompt: The prompt to generate text from
-            context: Additional context to include with the prompt
-            
-        Returns:
-            LLMOutput object with generated text
-        """
-        try:
-            # Combine prompt and context
-            full_prompt = f"{context}\n\n{prompt}" if context else prompt
-            
-            # Create messages for chat completion
-            messages = [
-                {"role": "user", "content": full_prompt}
-            ]
-            
-            # Generate text using OpenAI API
-            response = self.client.chat.completions.create(
-                model=self.model_name,
-                messages=messages,
-                max_tokens=200,
-                temperature=0.7
-            )
-            
-            generated_text = response.choices[0].message.content.strip()
-            
-            return LLMOutput(
-                model_name=self.name,
-                text=generated_text,
-                metadata={
-                    "model": self.model_name,
-                    "prompt_length": len(full_prompt),
-                    "completion_tokens": response.usage.completion_tokens,
-                    "prompt_tokens": response.usage.prompt_tokens,
-                    "total_tokens": response.usage.total_tokens
-                }
             )
         except Exception as e:
             return LLMOutput(
