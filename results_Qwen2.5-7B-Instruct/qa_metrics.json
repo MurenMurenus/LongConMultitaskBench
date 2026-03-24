@@ -1,0 +1,11 @@
+{
+  "benchmark_type": "qa",
+  "model_name": "Qwen2.5-7B-Instruct",
+  "samples_evaluated": 5396,
+  "metrics": {
+    "accuracy": 0.7800222386953298,
+    "precision": 0.7052518756698821,
+    "recall": 0.9680029422581832,
+    "f1": 0.8159975197643776
+  }
+}

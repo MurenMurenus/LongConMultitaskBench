@@ -1,0 +1,11 @@
+{
+  "benchmark_type": "structured",
+  "model_name": "Qwen3-8B",
+  "samples_evaluated": 2387,
+  "metrics": {
+    "accuracy": 0.5123586091328027,
+    "precision": 0.5037760995113283,
+    "recall": 0.9602032176121931,
+    "f1": 0.6608391608391608
+  }
+}

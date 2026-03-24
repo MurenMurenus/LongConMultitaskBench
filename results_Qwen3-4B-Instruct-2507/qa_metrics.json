@@ -1,0 +1,11 @@
+{
+  "benchmark_type": "qa",
+  "model_name": "Qwen3-4B-Instruct-2507",
+  "samples_evaluated": 5396,
+  "metrics": {
+    "accuracy": 0.8836174944403261,
+    "precision": 0.8447082096933729,
+    "recall": 0.9422581831555719,
+    "f1": 0.8908205841446454
+  }
+}

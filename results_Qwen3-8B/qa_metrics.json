@@ -1,0 +1,11 @@
+{
+  "benchmark_type": "qa",
+  "model_name": "Qwen3-8B",
+  "samples_evaluated": 5396,
+  "metrics": {
+    "accuracy": 0.882876204595997,
+    "precision": 0.8229650263076447,
+    "recall": 0.9779330636263333,
+    "f1": 0.893781512605042
+  }
+}
