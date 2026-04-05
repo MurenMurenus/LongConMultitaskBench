@@ -55,7 +55,7 @@ LongConMultitaskBench/
 
 ### Metrics Configuration (`conf/metrics/config.yaml`)
 - Enabled metrics selection
-- Additional metrics options (ROC AUC, Matthews correlation)
+- Additional metrics options (Matthews correlation for example)
 
 ## Usage
 

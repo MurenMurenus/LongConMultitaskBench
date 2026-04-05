@@ -3,7 +3,7 @@ import sys
 import json
 import os
 from typing import List, Dict
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 import hydra
 from omegaconf import DictConfig
 
@@ -132,9 +132,7 @@ def main(cfg: DictConfig):
     for metric_config in cfg.metrics.additional:
         if metric_config.enabled:
             metric_name = metric_config.name
-            if metric_name == "roc_auc":
-                metrics[metric_name] = roc_auc_score(y_true, y_pred)
-            elif metric_name == "matthews_corrcoef":
+            if metric_name == "matthews_corrcoef":
                 from sklearn.metrics import matthews_corrcoef
                 metrics[metric_name] = matthews_corrcoef(y_true, y_pred)
     

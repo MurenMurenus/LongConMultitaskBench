@@ -104,11 +104,6 @@ To use a different model name (consistent with evaluation):
 python scripts/calculate_metrics.py evaluation.model_choice=qwen3_4b_2507
 ```
 
-To enable additional metrics:
-```bash
-python scripts/calculate_metrics.py metrics.additional.roc_auc.enabled=true
-```
-
 ## Configuration Override Examples
 
 ### Use CPU models for generation:
@@ -116,11 +111,6 @@ python scripts/calculate_metrics.py metrics.additional.roc_auc.enabled=true
 python scripts/benchmark_generation.py generation_models=local council_judges=local
 ```
 
-### Use API models for evaluation:
-```bash
-python scripts/benchmark_evaluation.py evaluation_models=api
-```
-
 ### Enable additional metrics:
 ```bash
-python scripts/calculate_metrics.py metrics.additional.roc_auc.enabled=true metrics.additional.matthews_corrcoef.enabled=true
+python scripts/calculate_metrics.py metrics.additional.matthews_corrcoef.enabled=true

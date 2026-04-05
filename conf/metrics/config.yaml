@@ -18,10 +18,6 @@ classification:
 
 # Additional metrics that could be added
 additional:
-  - name: "roc_auc"
-    description: "ROC AUC score"
-    enabled: false
-  
   - name: "matthews_corrcoef"
     description: "Matthews correlation coefficient"
-    enabled: false
+    enabled: true
